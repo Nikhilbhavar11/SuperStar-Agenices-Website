@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Products | Super Star Agency</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<!-- AUTH GUARD -->
+<script src="js/guard.js"></script>
+
+<header class="app-header">
+  <div class="brand">
+    <img src="assets/logo.png" class="brand-logo" alt="Logo">
+    <span class="brand-text">Super Star Agency</span>
+  </div>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</header>
+
+<main class="container">
+
+  <h1 class="page-title">Manage Products</h1>
+  <p class="page-subtitle">Add, update or remove products.</p>
+
+  <!-- MODE SELECTOR -->
+  <div class="mode-selector">
+    <button class="mode-btn active" onclick="setMode('add', this)">Add Product</button>
+    <button class="mode-btn" onclick="setMode('update', this)">Update Product</button>
+    <button class="mode-btn" onclick="setMode('delete', this)">Delete Product</button>
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="card">
+    <h3 id="formTitle">Add New Product</h3>
+
+    <!-- ADD FORM -->
+    <div id="addForm">
+      <input id="category" placeholder="Category Name">
+      <input id="categoryImage" type="file" accept="image/*">
+      <input id="product" placeholder="Product Name">
+      <input id="price" type="number" placeholder="Price">
+      <button class="primary-btn" onclick="addProduct()">Add Product</button>
+    </div>
+
+    <div id="updateHint" class="hint hidden">
+      Click <b>Edit</b> on any product below.
+    </div>
+
+    <div id="deleteHint" class="hint hidden">
+      Click <b>Delete</b> on any product below.
+    </div>
+
+    <div id="msg" class="message"></div>
+  </div>
+
+  <!-- ALL PRODUCTS -->
+  <h2 class="section-title">All Products</h2>
+  <div id="categoryButtons" class="category-buttons"></div>
+  <div id="productsContainer" class="products-grid"></div>
+
+</main>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal hidden">
+  <div class="modal-card">
+    <h3>Edit Product</h3>
+    <select id="editCategory">
+      <option value="">Select Category</option>
+    </select>
+    <input id="editProduct" placeholder="Product Name">
+    <input id="editPrice" type="number" placeholder="Price">
+    <div class="modal-actions">
+      <button class="primary-btn" onclick="updateProduct()">Update</button>
+      <button class="secondary-btn" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://superstaragencies.in/backend";
+
+// Helper: safely parse JSON only if the content-type is JSON
+async function safeJson(res) {
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  if (!ct.includes('application/json')) return null;
+  try {
+    return await res.json();
+  } catch (e) {
+    console.error('safeJson parse error:', e);
+    return null;
+  }
+}
+
+console.log('[Products] Token from localStorage:', token ? 'Present' : 'Missing');
+
+/* =========================
+   STATE
+========================= */
+// token is already declared in guard.js
+let currentMode = "add";
+let editingId = null;
+let editingCategoryId = null;
+let allProducts = [];
+let allCategories = [];
+let categoriesMap = {}; // name -> image_url
+
+/* =========================
+   MODE SWITCH
+========================= */
+function setMode(mode, btn) {
+  currentMode = mode;
+
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+
+  const addForm = document.getElementById("addForm");
+  const updateHint = document.getElementById("updateHint");
+  const deleteHint = document.getElementById("deleteHint");
+  const formTitle = document.getElementById("formTitle");
+
+  addForm.classList.add("hidden");
+  updateHint.classList.add("hidden");
+  deleteHint.classList.add("hidden");
+
+  if (mode === "add") {
+    formTitle.innerText = "Add New Product";
+    addForm.classList.remove("hidden");
+  }
+
+  if (mode === "update") {
+    formTitle.innerText = "Update Product";
+    updateHint.classList.remove("hidden");
+  }
+
+  if (mode === "delete") {
+    formTitle.innerText = "Delete Product";
+    deleteHint.classList.remove("hidden");
+  }
+
+  // Refresh product display to show/hide buttons
+  renderCategoriesAndProducts(allProducts);
+}
+
+/* =========================
+   ADD PRODUCT
+========================= */
+async function addProduct() {
+  console.log('[Add Product] Function called');
+  const msg = document.getElementById("msg");
+  msg.textContent = "";
+  msg.className = "message";
+
+  const categoryInput = document.getElementById("category");
+  const categoryImageInput = document.getElementById("categoryImage");
+  const productInput = document.getElementById("product");
+  const priceInput = document.getElementById("price");
+
+  const category = categoryInput.value.trim();
+  const productName = productInput.value.trim();
+  const priceValue = priceInput.value;
+
+  console.log('[Add Product] Form values:', { category, productName, priceValue });
+
+  if (!category || !productName || !priceValue) {
+    console.log('[Add Product] Validation failed');
+    msg.textContent = "All fields are required";
+    msg.classList.add("error");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("category_name", category);
+  formData.append("product_name", productName);
+  formData.append("price", priceValue);
+  
+  if (categoryImageInput.files[0]) {
+    console.log('[Add Product] Category image selected:', categoryImageInput.files[0].name);
+    formData.append("category_image", categoryImageInput.files[0]);
+  }
+
+  console.log('[Add Product] Making API call to:', API_BASE + '/api/admin/add-product');
+
+  try {
+    const res = await fetch(API_BASE + "/api/admin/add-product", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token
+      },
+      body: formData
+    });
+
+    console.log('[Add Product] Response status:', res.status);
+    const data = await safeJson(res);
+    console.log('[Add Product] Response data:', data);
+
+    if (res.ok) {
+      msg.textContent = (data && data.message) || "Product added successfully.";
+      msg.classList.add("success");
+      categoryInput.value = "";
+      productInput.value = "";
+      priceInput.value = "";
+      categoryImageInput.value = "";
+      console.log('[Add Product] Success! Reloading products...');
+      loadProducts();
+    } else {
+      msg.textContent = (data && data.message) || "Error";
+      msg.classList.add("error");
+    }
+  } catch (err) {
+    console.error('[Add Product] Error:', err);
+    msg.textContent = "Network error. Please try again.";
+    msg.classList.add("error");
+  }
+}
+
+/* =========================
+   LOAD PRODUCTS
+========================= */
+async function loadProducts() {
+  console.log('[Load Products] Function called');
+  try {
+    // Load products
+    console.log('[Load Products] Making request to:', API_BASE + '/api/admin/products');
+    const res = await fetch(API_BASE + "/api/admin/products", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    
+    console.log('[Load Products] Products response status:', res.status);
+    
+    if (!res.ok) {
+      console.error('[Load Products] Failed to load products', res.status);
+      console.error('[Load Products] Response:', await res.text());
+      return;
+    }
+    
+    const productsData = await safeJson(res);
+    if (!productsData) {
+      console.error('[Load Products] Products response was not JSON');
+      return;
+    }
+    allProducts = productsData;
+    console.log('[Load Products] Loaded products:', allProducts);
+
+    // Load categories
+    console.log('[Load Products] Making request to:', API_BASE + '/api/admin/categories');
+    const catRes = await fetch(API_BASE + "/api/admin/categories", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    
+    console.log('[Load Products] Categories response status:', catRes.status);
+    
+    if (!catRes.ok) {
+      console.error('[Load Products] Failed to load categories', catRes.status);
+      console.error('[Load Products] Response:', await catRes.text());
+      return;
+    }
+    
+    const categoriesData = await safeJson(catRes);
+    if (!categoriesData) {
+      console.error('[Load Products] Categories response was not JSON');
+      return;
+    }
+    allCategories = categoriesData;
+    console.log('[Load Products] Loaded categories:', allCategories);
+
+    renderCategoriesAndProducts(allProducts);
+  } catch (error) {
+    console.error('[Load Products] Error loading products:', error);
+  }
+}
+
+/* =========================
+   RENDER UI
+========================= */
+function renderCategoriesAndProducts(products) {
+  const container = document.getElementById("productsContainer");
+  const categoryButtonsDiv = document.getElementById("categoryButtons");
+
+  if (!container || !categoryButtonsDiv) {
+    console.error("Container elements not found");
+    return;
+  }
+
+  container.innerHTML = "";
+  categoryButtonsDiv.innerHTML = "";
+  categoriesMap = {};
+
+  console.log("Rendering products:", products);
+
+  products.forEach(p => {
+    if (!categoriesMap[p.category]) {
+      categoriesMap[p.category] = {
+        image: p.category_image_url || "uploads/categories/default-superstar.png",
+        id: p.category_id
+      };
+    }
+  });
+
+  const categoryNames = Object.keys(categoriesMap).sort();
+  console.log("Categories:", categoryNames);
+
+  categoryNames.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.textContent = cat;
+    btn.className = "category-btn";
+    btn.onclick = () => {
+      // Remove active class from all buttons
+      document.querySelectorAll(".category-btn").forEach(b => b.classList.remove("active"));
+      // Add active class to clicked button
+      btn.classList.add("active");
+      filterByCategory(cat);
+    };
+    categoryButtonsDiv.appendChild(btn);
+  });
+
+  if (categoryNames.length > 0) {
+    // Set first button as active
+    const firstBtn = categoryButtonsDiv.querySelector(".category-btn");
+    if (firstBtn) firstBtn.classList.add("active");
+    filterByCategory(categoryNames[0]);
+  } else {
+    container.innerHTML = '<p>No products found. Add some products to get started.</p>';
+  }
+}
+
+function filterByCategory(category) {
+  const container = document.getElementById("productsContainer");
+  container.innerHTML = "";
+
+  const categoryData = categoriesMap[category];
+  const image = categoryData ? categoryData.image : "uploads/categories/default-superstar.png";
+
+  const categoryProducts = allProducts.filter(p => p.category === category);
+  console.log(`Products in ${category}:`, categoryProducts);
+
+  categoryProducts.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "product-card";
+    
+    const img = document.createElement("img");
+    img.src = API_BASE + `/${image}`;
+    img.alt = p.name;
+    img.className = "product-card-image";
+    img.onerror = () => img.src = API_BASE + '/uploads/categories/default-superstar.png';
+    
+    const body = document.createElement("div");
+    body.className = "product-card-body";
+    
+    const name = document.createElement("div");
+    name.className = "product-card-name";
+    name.textContent = p.name;
+    name.title = p.name; // Show full name on hover
+    
+    const price = document.createElement("div");
+    price.className = "product-card-price";
+    price.textContent = p.price;
+    
+    body.appendChild(name);
+    body.appendChild(price);
+    
+    // Conditional button rendering based on mode
+    const actions = document.createElement("div");
+    actions.className = "product-card-actions";
+    
+    if (currentMode === "update") {
+      const editBtn = document.createElement("button");
+      editBtn.className = "edit-btn";
+      editBtn.textContent = "Edit";
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        openEdit(p.id, p.category_id, p.name, p.price);
+      };
+      actions.appendChild(editBtn);
+    }
+    
+    if (currentMode === "delete") {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteProduct(p.id);
+      };
+      actions.appendChild(deleteBtn);
+    }
+    
+    if (currentMode === "update" || currentMode === "delete") {
+      body.appendChild(actions);
+    }
+    
+    card.appendChild(img);
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+}
+
+/* =========================
+   EDIT
+========================= */
+function openEdit(id, categoryId, name, price) {
+  if (currentMode !== "update") {
+    alert("Switch to Update mode first");
+    return;
+  }
+
+  editingId = id;
+  editingCategoryId = categoryId;
+  
+  const editProduct = document.getElementById("editProduct");
+  const editPrice = document.getElementById("editPrice");
+  const editCategory = document.getElementById("editCategory");
+  const editModal = document.getElementById("editModal");
+  
+  editProduct.value = name;
+  editPrice.value = price;
+  
+  // Populate category dropdown
+  editCategory.innerHTML = '<option value="">Select Category</option>';
+  allCategories.forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat.id;
+    option.textContent = cat.name;
+    if (cat.id === categoryId) {
+      option.selected = true;
+    }
+    editCategory.appendChild(option);
+  });
+  
+  editModal.classList.remove("hidden");
+}
+
+function closeEditModal() {
+  const editModal = document.getElementById("editModal");
+  editModal.classList.add("hidden");
+  editingId = null;
+  editingCategoryId = null;
+}
+
+async function updateProduct() {
+  if (!editingId) return;
+
+  const editProduct = document.getElementById("editProduct");
+  const editPrice = document.getElementById("editPrice");
+  const editCategory = document.getElementById("editCategory");
+
+  const categoryId = editCategory.value;
+  const productName = editProduct.value.trim();
+  const priceValue = editPrice.value;
+
+  if (!categoryId || !productName || !priceValue) {
+    alert("All fields are required");
+    return;
+  }
+
+  await fetch(API_BASE + "/api/admin/product/" + editingId, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({
+      category_id: categoryId,
+      product_name: productName,
+      price: priceValue
+    })
+  });
+
+  closeEditModal();
+  loadProducts();
+}
+
+/* =========================
+   DELETE
+========================= */
+async function deleteProduct(id) {
+  if (currentMode !== "delete") {
+    alert("Switch to Delete mode first");
+    return;
+  }
+
+  if (!confirm("Delete this product permanently?")) return;
+
+  await fetch(API_BASE + "/api/admin/product/" + id, {
+    method: "DELETE",
+    headers: { Authorization: "Bearer " + token }
+  });
+
+  loadProducts();
+}
+/* =========================
+   LOGOUT
+========================= */
+function logout() {
+  localStorage.removeItem("admin_token");
+  window.location.href = "login.html";
+}
+
+/* INIT */
+document.addEventListener("DOMContentLoaded", loadProducts);
+</script>
+
+<script src="js/auth.js"></script>
+</body>
+</html>

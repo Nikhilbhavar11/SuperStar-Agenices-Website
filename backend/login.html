@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | Super Star Agency</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="login-body">
+
+  <!-- LOGIN CARD -->
+  <div class="login-card">
+
+    <img src="assets/logo.png" class="login-logo" alt="Super Star Agency Logo">
+
+    <h2 class="brand-title">Super Star Agency</h2>
+    <p class="subtitle">Admin Panel Login</p>
+
+    <!-- FORM (important for Enter key) -->
+    <form id="loginForm">
+      <input id="username" placeholder="Username" autocomplete="username">
+      
+      <div class="password-input-wrapper">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+        <button type="button" class="password-toggle" onclick="togglePassword('password')" aria-label="Show password" aria-pressed="false" title="Show password">
+          <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+
+      <button type="submit" class="primary-btn">Login</button>
+    </form>
+
+    <a href="forget-password.html" class="forgot-link">Forgot password?</a>
+  </div>
+
+  <!-- MODAL -->
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <h3 id="modalTitle">Login Error</h3>
+    <p id="modalMsg">Error message</p>
+
+    <div class="modal-actions">
+      <button onclick="closeModal()" class="primary-btn">OK</button>
+    </div>
+  </div>
+</div>
+  <script>
+    // Test function for debugging
+    window.testLogin = function() {
+      console.log('TEST LOGIN BUTTON CLICKED');
+      login();
+    };
+
+    function togglePassword(inputId) {
+      const input = document.getElementById(inputId);
+      const button = input.parentNode.querySelector('.password-toggle');
+      const icon = button.querySelector('.eye-icon');
+      const isHidden = input.type === 'password';
+
+      if (isHidden) {
+        input.type = 'text';
+        button.setAttribute('aria-pressed', 'true');
+        button.setAttribute('aria-label', 'Hide password');
+        button.title = 'Hide password';
+        icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+      } else {
+        input.type = 'password';
+        button.setAttribute('aria-pressed', 'false');
+        button.setAttribute('aria-label', 'Show password');
+        button.title = 'Show password';
+        icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+      }
+    }
+  </script>
+  <script src="js/auth.js"></script>
+</body>
+</html>
