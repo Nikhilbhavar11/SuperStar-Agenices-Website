@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - Superstar Agency</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="cart.css">
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html">
+                    <img src="source/logo.png" alt="Superstar Agency Logo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-search">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search products or brands..."
+                    onkeyup="searchProducts()"
+                >
+            </div>
+            <div class="nav-cart" onclick="window.location.href='cart.html'">
+                <span id="cartCount">0</span>
+                <i class="cart-icon">🛒</i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart Page Container -->
+    <div class="cart-page-container">
+        <!-- Page Header -->
+        <div class="cart-page-header">
+            <div class="header-content">
+                <button class="back-button" onclick="window.location.href='index.html'">
+                    <span class="back-icon">←</span>
+                    <span>Continue Shopping</span>
+                </button>
+                <h1 class="cart-page-title">
+                    <span class="cart-icon-large">🛒</span>
+                    Your Shopping Cart
+                </h1>
+                <p class="cart-page-subtitle" id="cartItemCount">0 items in your cart</p>
+            </div>
+        </div>
+
+        <!-- Cart Content -->
+        <div class="cart-content-wrapper">
+            <!-- Left Column - Cart Items -->
+            <div class="cart-items-section">
+                <div class="cart-items-header">
+                    <h2>Cart Items</h2>
+                    <button class="clear-cart-btn" onclick="clearCart()" id="clearCartBtn" style="display: none;">
+                        Clear Cart
+                    </button>
+                </div>
+                <div id="cartItemsContainer" class="cart-items-container">
+                    <!-- Cart items will be rendered here -->
+                </div>
+                <div id="emptyCart" class="empty-cart">
+                    <div class="empty-cart-icon">🛒</div>
+                    <h3>Your cart is empty</h3>
+                    <p>Looks like you haven't added anything to your cart yet.</p>
+                    <button class="shop-now-btn" onclick="window.location.href='index.html'">
+                        Start Shopping
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column - Order Summary & Checkout -->
+            <div class="cart-summary-section">
+                <div class="summary-card">
+                    <h3 class="summary-title">Order Summary</h3>
+                    
+                    <!-- Price Breakdown -->
+                    <div class="price-breakdown">
+                        <div class="price-row">
+                            <span>Subtotal</span>
+                            <span id="subtotal">₹0.00</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Delivery Charges</span>
+                            <span class="delivery-info">Free</span>
+                        </div>
+                        <div class="price-row total-row">
+                            <span>Total</span>
+                            <span id="cartTotal">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Information Form -->
+                    <div class="customer-info-form">
+                        <h3 class="form-title">
+                            <span class="form-icon">📦</span>
+                            Delivery Information
+                        </h3>
+                        <div class="form-group">
+                            <label for="customerName">
+                                <span class="label-icon">👤</span>
+                                Name <span class="required">*</span>
+                            </label>
+                            <input type="text" id="customerName" placeholder="Enter your full name" required>
+                            <span class="error-message" id="nameError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerNumber">
+                                <span class="label-icon">📱</span>
+                                Phone Number <span class="required">*</span>
+                            </label>
+                            <input type="tel" id="customerNumber" placeholder="Enter your 10-digit phone number" required>
+                            <span class="error-message" id="numberError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerAddress">
+                                <span class="label-icon">📍</span>
+                                Delivery Address <span class="required">*</span>
+                            </label>
+                            <textarea id="customerAddress" rows="4" placeholder="Enter your complete delivery address" required></textarea>
+                            <span class="error-message" id="addressError"></span>
+                        </div>
+                    </div>
+
+                    <!-- Checkout Button -->
+                    <button class="checkout-button" onclick="sendToWhatsApp()">
+                        <span class="checkout-icon">💬</span>
+                        <span>Checkout via WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="cart.js"></script>
+</body>
+</html>
+

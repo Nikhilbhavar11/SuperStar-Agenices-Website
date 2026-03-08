@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superstar Agency - FMCG Distribution</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-container">
+
+        <div class="nav-logo">
+            <img src="source/logo.png" alt="Superstar Agency Logo" class="logo-image">
+        </div>
+
+        <div class="nav-search">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search products or brands..."
+                onkeyup="searchProducts()"
+            >
+        </div>
+
+        <!-- CART -->
+        <div class="nav-cart" onclick="openCart()">
+            <span id="cartCount">0</span>
+            <i class="cart-icon">🛒</i>
+        </div>
+
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+        <h1 class="hero-title">Superstar Agency</h1>
+        <p class="hero-subtitle">Premium FMCG Product Distribution</p>
+        <p class="hero-description">
+            Wholesale distribution of quality snacks for retailers at competitive prices
+        </p>
+        <button class="cta-button" onclick="scrollToProducts()">
+            Explore Products
+        </button>
+    </div>
+
+    </section>
+
+<!-- PRODUCTS -->
+<section class="products-section" id="productsSection">
+    <div class="container">
+
+        <h2 class="section-title">Our Products</h2>
+
+        <!-- STATS -->
+        <div class="product-stats">
+            <div class="stat-pill"><span id="statProducts">0</span> Products</div>
+            <div class="stat-pill"><span id="statBrands">0</span> Brands</div>
+            <div class="stat-pill"><span id="statCategories">0</span> Categories</div>
+        </div>
+
+        <!-- CATEGORY TABS (AS IS) -->
+        <div class="category-tabs" id="categoryTabs">
+            <button class="category active" onclick="filterByCategory('All Products')">All Products</button>
+            <button class="category" onclick="filterByCategory('Badshaha Masale')">Badshaha Masale</button>
+            <button class="category" onclick="filterByCategory('Athvales Sweet')">Athvales Sweet</button>
+            <button class="category" onclick="filterByCategory('ATHAVLES')">ATHAVLES</button>
+            <button class="category" onclick="filterByCategory('ITEM')">ITEM</button>
+            <button class="category" onclick="filterByCategory('KUNSH MASALE')">KUNSH MASALE</button>
+            <button class="category" onclick="filterByCategory('Laxmi Narayn Chiwda')">Laxmi Narayn Chiwda</button>
+            <button class="category" onclick="filterByCategory('Laxminarayan Sweets')">Laxminarayan Sweets</button>
+            <button class="category" onclick="filterByCategory('Laxminarayn Chips')">Laxminarayn Chips</button>
+            <button class="category" onclick="filterByCategory('MILTON')">MILTON</button>
+            <button class="category" onclick="filterByCategory('Marino Biscuts')">Marino Biscuts</button>
+            <button class="category" onclick="filterByCategory('NEW GHEE')">NEW GHEE</button>
+            <button class="category" onclick="filterByCategory('NUTRILITE CHIKKI')">NUTRILITE CHIKKI</button>
+            <button class="category" onclick="filterByCategory('PICKWICK')">PICKWICK</button>
+            <button class="category" onclick="filterByCategory('Zed Black Agarrabatti')">Zed Black Agarrabatti</button>
+            <button class="category" onclick="filterByCategory('CHHEDA SPECIALITIES FOODS PVT LTD')">CHHEDA</button>
+        </div>
+        
+        <!-- SORTING CONTROLS -->
+        <div class="sorting-controls">
+            <label for="sortOptions">Sort by:</label>
+            <select id="sortOptions" onchange="handleSortChange(this.value)">
+                <option value="">Default</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="price-asc">Price (Low to High)</option>
+                <option value="price-desc">Price (High to Low)</option>
+            </select>
+        </div>
+
+        <!-- PRODUCTS RENDER -->
+        <div id="brandsContainer"></div>
+
+    </div>
+</section>
+
+<!-- CART MODAL -->
+<div id="cartModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeCart()">&times;</span>
+        <h2>Your Cart</h2>
+        <div id="cartItems"></div>
+        <div class="cart-total">
+            <h3>Total: ₹<span id="cartTotal">0.00</span></h3>
+        </div>
+        
+        <!-- Customer Information Form -->
+        <div class="customer-info-form">
+            <h3>Delivery Information</h3>
+            <div class="form-group">
+                <label for="customerName">Name <span class="required">*</span></label>
+                <input type="text" id="customerName" placeholder="Enter your name" required>
+                <span class="error-message" id="nameError"></span>
+            </div>
+            <div class="form-group">
+                <label for="customerNumber">Phone Number <span class="required">*</span></label>
+                <input type="tel" id="customerNumber" placeholder="Enter your phone number" required>
+                <span class="error-message" id="numberError"></span>
+            </div>
+            <div class="form-group">
+                <label for="customerAddress">Address <span class="required">*</span></label>
+                <textarea id="customerAddress" rows="3" placeholder="Enter your delivery address" required></textarea>
+                <span class="error-message" id="addressError"></span>
+            </div>
+        </div>
+        
+        <button class="checkout-button" onclick="sendToWhatsApp()">
+            Checkout via WhatsApp
+        </button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<footer class="dark-footer">
+  <div class="footer-wrap">
+
+    <!-- Brand -->
+    <div class="footer-col brand">
+      <img src="source/logo.png" alt="Super Star Agencies">
+      <h3>Super Star Agencies</h3>
+      <p>
+        Trusted FMCG wholesale distribution delivering quality
+        products across Maharashtra with reliability and trust.
+      </p>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#productsSection">Products</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+
+    <!-- Business Info -->
+    <div class="footer-col">
+      <h4>Business Info</h4>
+      <p><strong>GSTIN:</strong> 27ADYPN2584P1ZC</p>
+      <p><strong>FSSAI No:</strong> 11522038000745</p>
+      <p><strong>Proprietor:</strong><br>Shivaji Prabhakar Naikodi</p>
+    </div>
+
+    <!-- Contact -->
+    <div class="footer-col">
+      <h4>Contact Info</h4>
+
+      <div class="contact-item">
+        <span>📞</span>
+        <p>+91 80078 35556</p>
+      </div>
+
+      <div class="contact-item">
+        <span>✉️</span>
+        <p>naikodishivaji@gmail.com</p>
+      </div>
+
+      <div class="contact-item">
+        <span>📍</span>
+        <p>
+          At Po. Narayangaon,<br>
+          Tal Junnar, Dist Pune – 410504
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="footer-bottom">
+    <p>© 2025 Super Star Agencies. All rights reserved.</p>
+    <p>
+      Site designed & developed by
+      <strong>Weblution</strong> |
+      📞 8983063341 / 8767243352
+    </p>
+  </div>
+</footer>
+
+
+
+
+  
